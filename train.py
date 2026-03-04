@@ -9,7 +9,8 @@ import model.model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
-
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # fix random seeds for reproducibility
 SEED = 123

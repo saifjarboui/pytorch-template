@@ -1,7 +1,10 @@
+from pathlib import PosixPath
+
 import torch
 from abc import abstractmethod
 from numpy import inf
 from logger import TensorboardWriter
+from parse_config import ConfigParser
 
 
 class BaseTrainer:
@@ -131,6 +134,7 @@ class BaseTrainer:
         """
         resume_path = str(resume_path)
         self.logger.info("Loading checkpoint: {} ...".format(resume_path))
+        torch.serialization.add_safe_globals([ConfigParser, PosixPath])
         checkpoint = torch.load(resume_path)
         self.start_epoch = checkpoint['epoch'] + 1
         self.mnt_best = checkpoint['monitor_best']
