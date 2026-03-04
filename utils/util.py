@@ -26,10 +26,23 @@ def inf_loop(data_loader):
     for loader in repeat(data_loader):
         yield from loader
 
+
 def prepare_device(n_gpu_use):
     """
     setup GPU device if available. get gpu device indices which are used for DataParallel
     """
+    # Check for MPS (Apple Silicon) availability
+    if torch.backends.mps.is_available():
+        if n_gpu_use > 0:
+            device = torch.device('mps')
+            list_ids = [0]
+            return device, list_ids
+        else:
+            device = torch.device('cpu')
+            list_ids = []
+            return device, list_ids
+
+    # Original CUDA logic
     n_gpu = torch.cuda.device_count()
     if n_gpu_use > 0 and n_gpu == 0:
         print("Warning: There\'s no GPU available on this machine,"
@@ -39,8 +52,7 @@ def prepare_device(n_gpu_use):
         print(f"Warning: The number of GPU\'s configured to use is {n_gpu_use}, but only {n_gpu} are "
               "available on this machine.")
         n_gpu_use = n_gpu
-    device = torch.device('cuda:0' if n_gpu_use > 0 else (
-        'mps' if torch.backends.mps.is_available() else 'cpu'))
+    device = torch.device('cuda:0' if n_gpu_use > 0 else 'cpu')
     list_ids = list(range(n_gpu_use))
     return device, list_ids
 
@@ -57,9 +69,9 @@ class MetricTracker:
     def update(self, key, value, n=1):
         if self.writer is not None:
             self.writer.add_scalar(key, value)
-        self._data.total[key] += value * n
-        self._data.counts[key] += n
-        self._data.average[key] = self._data.total[key] / self._data.counts[key]
+        self._data.loc[key, 'total'] += value * n
+        self._data.loc[key, 'counts'] += n
+        self._data.loc[key, 'average'] = self._data.total[key] / self._data.counts[key]
 
     def avg(self, key):
         return self._data.average[key]
