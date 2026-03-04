@@ -60,7 +60,7 @@ class Trainer(BaseTrainer):
                     loss.item()))
                 self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
-            if batch_idx == self.len_epoch:
+            if batch_idx + 1 == self.len_epoch:
                 break
         log = self.train_metrics.result()
 
